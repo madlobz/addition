@@ -1,0 +1,39 @@
+<?php
+
+function addition_webform_form_alter(&$form, &$form_state, $form_id){
+  switch($form_id){
+    case 'system_site_information_settings':
+      $form['site_information']['site_mail_webform'] = array(
+        '#title' => t('E-mail address'),
+        '#description' => t('<em>Inbound</em> e-mail address to receive emails with the basic forms of the site.'),
+        '#required' => true,
+        '#type' => 'textfield',
+        '#default_value' => variable_get('site_mail_webform', ''),
+      );
+      $form['#submit'][] = 'addition_webform_settings_submit';
+      break;
+  }
+}
+
+function addition_webform_settings_submit($form, $form_state) {
+	$email = $form_state['values']['site_mail_webform'];
+	
+	$nodes = node_load_multiple(false, array('type' => 'webform'));
+  foreach($nodes as $node){
+    $node->webform['emails'] = array(
+      1 => array(
+        'nid' => $node->nid,
+        'eid' => 1,
+        'email' => $email,
+        'subject' => 'default',
+        'from_name' => 'default',
+        'from_address' => 'default',
+        'template' => '[submission:values]',
+        'excluded_components' => array(),
+        'html' => 0,
+        'attachments' => 0,
+      ),
+    );
+    node_save($node);
+  }
+}

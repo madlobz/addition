@@ -1,0 +1,6 @@
+name = Addition Placeholder
+description = Interface of additional settings for placeholder module
+package = Addition
+core = 7.x
+;configure = 
+dependencies[] = addition

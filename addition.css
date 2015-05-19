@@ -1,0 +1,95 @@
+/* Title Tabs */
+
+ul.title-primary {
+  margin: 0 0 0 0.5em !important;
+  padding: 0 !important;
+  border: 0 !important;
+  display: inline-block;
+  height: auto;
+  line-height: normal;
+  list-style: none;
+  font-size: 0.5em;
+}
+ul.title-primary li {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  display: inline-block;  
+}
+ul.title-primary li a {
+  margin: 0 0 0 1em !important;
+  padding: 0 !important;
+  border: 0 !important;
+  display: inline-block;
+  background: none !important;
+}
+ul.title-primary li a.active {
+  display: none;
+}
+ul.title-primary li a.edit:before {
+  content: '\270e\0020';
+}
+ul.title-primary li a.view:before {
+  content: '\2713\0020';
+}
+
+
+/* Views */
+
+.view-header {
+  margin-bottom: 1em;
+}
+.view-footer {
+  margin-top: 1em;
+}
+
+
+/* Ajax */
+
+.ajax-progress {
+  display: none;
+}
+.progress-disabled {
+  opacity: 0.7;
+}
+
+/* Required */
+
+.form-item input.error, .form-item textarea.error, .form-item select.error {
+  border-width: 1px;
+}
+
+/* Forms */
+input[type="submit"] {
+  cursor: pointer;
+}
+
+/* Modal */
+#modalContent {
+  top: 100px !important;
+  height: auto !important;
+}
+div.ctools-modal-content {
+  width: auto !important;
+}
+#modalBackdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  background: black !important;
+}
+#modal-content {
+  overflow: visible;
+  min-width: 300px;
+  max-width: 800px;
+  width: auto !important;
+}
+#modal-content:after {
+  content: '';
+  display: block;
+  clear: both;
+}

@@ -1,0 +1,7 @@
+name = Addition Views
+description = Interface of additional settings for views module
+package = Addition
+core = 7.x
+;configure = 
+dependencies[] = addition
+dependencies[] = views_ui

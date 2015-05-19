@@ -1,0 +1,94 @@
+<?php
+
+function addition_views_menu(){
+  $items = array();
+  $items['admin/addition/views/%/%'] = array( 
+    'title' => 'Edit views addition settings',
+    'page callback' => 'addition_views_edit_page',
+    'page arguments' => array(3, 4),
+    'access arguments' => array('edit views addition settings'),
+    'type' => MENU_CALLBACK,
+    'file' => 'addition_views.admin.inc',
+  );
+  return $items;
+}
+
+function addition_views_permission() {
+  return array('edit views addition settings' =>
+    array(
+      'title' => t('Edit views addition settings'),
+      'description' => t('Edit addition settings such as header, footer, empty text, etc.'),
+    )
+  );
+}
+
+function addition_views_menu_local_tasks_alter(&$data, $router_item, $root_path){
+  if(!user_access('edit views addition settings')) return;
+  
+  switch($router_item['page_callback']){
+    case 'views_page':
+      $data['tabs'][0]['output'][] = array(
+        '#theme' => 'menu_local_task',
+        '#link' => array(
+          'title' => t('View'),
+          'href' => $root_path,
+          'tab_root_href' => $root_path,
+          'localized_options' => array(
+            'attributes' => array(
+              'class' => array('view'),
+            ),
+          ),
+        ),
+        '#active' => true,
+      );
+      $data['tabs'][0]['output'][] = array(
+        '#theme' => 'menu_local_task',
+        '#link' => array(
+          'title' => t('Edit'),
+          'href' => 'admin/addition/views/'.implode('/', $router_item['page_arguments']),
+          'tab_root_href' => $root_path,
+          'localized_options' => array(
+            'attributes' => array(
+              'class' => array('edit'),
+            ),
+          ),
+        ),
+      );
+      $data['tabs'][0]['count'] = count($data['tabs'][0]['output']);
+      break;
+    case 'addition_views_edit_page':
+      $view = views_get_view($router_item['page_arguments'][0]);
+      $view->set_display($router_item['page_arguments'][1]);
+      $root_path = $view->display_handler->get_option('path');
+      
+      $data['tabs'][0]['output'][] = array(
+        '#theme' => 'menu_local_task',
+        '#link' => array(
+          'title' => t('View'),
+          'href' => $root_path,
+          'tab_root_href' => $root_path,
+          'localized_options' => array(
+            'attributes' => array(
+              'class' => array('view'),
+            ),
+          ),
+        ),
+      );
+      $data['tabs'][0]['output'][] = array(
+        '#theme' => 'menu_local_task',
+        '#link' => array(
+          'title' => t('Edit'),
+          'href' => 'admin/addition/views/'.implode('/', $router_item['page_arguments']),
+          'tab_root_href' => $root_path,
+          'localized_options' => array(
+            'attributes' => array(
+              'class' => array('edit'),
+            ),
+          ),
+        ),
+        '#active' => true,
+      );
+      $data['tabs'][0]['count'] = count($data['tabs'][0]['output']);
+      break;
+  }
+}

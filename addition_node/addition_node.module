@@ -1,0 +1,58 @@
+<?php
+
+function addition_node_init(){
+  if(variable_get('addition_ajax_node_load', 1)){
+    ctools_include('modal');
+    ctools_modal_add_js();
+  }
+}
+
+function addition_node_menu_alter(&$items){
+  $items['node/%node']['page callback'] = 'addition_node_page_view';
+}
+
+function addition_node_page_view($node){
+  $view = node_page_view($node);
+  if(variable_get('addition_ajax_node_load', 1) && drupal_is_ajax()){
+    ctools_include('modal');
+    ctools_modal_add_js();
+  
+    $messages = theme('status_messages');
+    $commands[] = ctools_modal_command_display($node->title, $messages.render($view));
+    print ajax_deliver(array(
+      '#type' => 'ajax',
+      '#commands' => $commands,
+    ));
+    drupal_exit();
+    return;
+  }
+  return $view;
+}
+
+function addition_node_form_alter(&$form, &$form_state, $form_id){
+  if(variable_get('addition_remove_comment_tips', 1)&&isset($form['comment_body'])) $form['comment_body']['#after_build'][] = 'addition_remove_tips';
+  
+  switch($form_id){
+    case 'addition_settings_form':
+      $form['addition_ajax_node_load'] = array(
+        '#title' => t('Use ajax node load in modal window'),
+        '#type' => 'checkbox',
+        '#default_value' => variable_get('addition_ajax_node_load', 1),
+      );
+      $form['addition_remove_comment_tips'] = array(
+        '#title' => t('Remove comment tips'),
+        '#type' => 'checkbox',
+        '#default_value' => variable_get('addition_remove_comment_tips', 1),
+        '#description' => '<b>'.t('For another fields').':</b> $form[\'field_name\'][\'#after_build\'][] = \'addition_remove_tips\';',
+      );
+      break;
+  }
+}
+
+function addition_remove_tips(&$form) {
+	unset($form['und'][0]['value']['format'], $form['und'][0]['format'], $form['und']['format'], $form['format']);
+	foreach($form['und'][0]['value']['#pre_render'] as $k=>$v){
+	  if($v=='ckeditor_pre_render_text_format') unset($form['und'][0]['value']['#pre_render'][$k]);
+	}
+	return $form;
+}

@@ -1,0 +1,6 @@
+name = Addition Metatag
+description = Interface of additional settings for metatag module
+package = Addition
+core = 7.x
+
+dependencies[] = metatag

@@ -1,0 +1,49 @@
+<?php
+
+function addition_placeholder_init() {
+  drupal_add_js(drupal_get_path('module', 'addition_placeholder') . '/jquery.placeholder.js');
+}
+
+function addition_placeholder_form_alter(&$form, &$form_state, $form_id){
+  $forms_id = explode("\n", variable_get('addition_placeholder_form_id', ''));
+  foreach($forms_id as $id){
+    if($form_id==trim($id)){
+      addition_add_placeholders($form);
+    }
+  }
+  
+  switch($form_id){
+    case 'addition_settings_form':
+      $form['addition_placeholder_form_id'] = array(
+        '#title' => t('The forms ID in which you want to add placeholder'),
+        '#type' => 'textarea',
+        '#default_value' => variable_get('addition_placeholder_form_id', ''),
+        '#description' => '<em>user_profile_form</em>, <em>user_login</em>, <em>user_register_form</em>, <em>user_pass</em>, <em>webform_node_form</em>, <em>page_node_form</em>, <em>webform_client_form_123</em>.',
+      );
+      break;
+  }
+}
+
+function addition_add_placeholders(&$form){
+  foreach($form as $field=>$value){
+    if(!is_array($value)) continue;
+    if(isset($value['#type'])){
+      if(isset($value['#title'])&&!empty($value['#title'])&&in_array($value['#type'], array('textfield', 'textarea', 'text_format', 'webform_email', 'password'))){
+        $form[$field]['#attributes']['placeholder'] = $form[$field]['#title'];
+        $form[$field]['#title_display'] = 'invisible';
+        unset($form[$field]['#decription']);
+      }
+      if($value['#type']=='password_confirm') $form[$field]['#after_build'][] = 'addition_add_password_placeholders';
+    }
+    addition_add_placeholders($form[$field]);
+  }  
+  return $form;
+}
+function addition_add_password_placeholders($element){
+  if($element['#type'] == 'password_confirm') {
+    unset($element['#attached']);
+    unset($element['#description']);
+  }
+  addition_add_placeholders($element);
+  return $element;
+}

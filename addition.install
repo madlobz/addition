@@ -1,0 +1,26 @@
+<?php
+
+function addition_install() {
+  variable_set('site_404', 'not-found');
+  variable_set('site_403', 'access-denied');
+  
+  $format = filter_format_load('filtered_html');
+  $filter = filter_list_format($format->format);
+  $fields = (array)$filter['filter_html'];
+  unset($fields['title']);
+  $fields['settings']['allowed_html'] = '<a> <em> <strong> <cite> <blockquote> <code> <ul> <ol> <li> <dl> <dt> <dd> <table> <tbody> <thead> <tfooter> <tr> <td> <h1> <h2> <h3> <h4> <h5> <h6> <iframe> <object>';
+  $fields['settings'] = serialize($fields['settings']);
+  db_update('filter')
+    ->condition('format', $format->format)
+    ->condition('name', 'filter_html')
+    ->fields($fields)->execute();
+  
+  module_invoke_all('filter_format_update', $format);
+  cache_clear_all($format->format . ':', 'cache_filter', TRUE);
+  filter_formats_reset();
+}
+
+function addition_uninstall() {
+  variable_set('site_404', '');
+  variable_set('site_403', '');
+}

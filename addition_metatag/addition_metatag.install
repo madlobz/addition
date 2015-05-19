@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the metatag module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function addition_metatag_schema() {
+  $schema['metatag_url'] = array(
+    'fields' => array(
+      'path' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to',
+      ),
+      'data' => array(
+        'type' => 'blob',
+        'size' => 'big',
+        'not null' => TRUE,
+        'serialize' => TRUE,
+      ),
+    ),
+    'primary key' => array('path'),
+  );
+
+  return $schema;
+}

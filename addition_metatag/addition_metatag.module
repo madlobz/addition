@@ -1,0 +1,112 @@
+<?php
+
+module_load_include('functions.inc', 'addition_metatag');
+
+function addition_metatag_menu(){
+  $items['admin/config/search/metatags/path/%'] = array(
+    'title' => t('Edit meta tags'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('addition_metatag_settings_form', 5),
+    'access callback' => 'metatag_url_access',
+    'access arguments' => array(5),
+    'type' => MENU_CALLBACK,
+    'file' => 'addition_metatag.admin.inc',
+  );
+  return $items;
+}
+
+function addition_metatag_menu_alter(&$items){
+  $paths = array();
+  foreach($items as $path=>$item){
+    if(!isset($item['metatag'])||!$item['metatag']) continue;
+    $name = str_replace('/', '--', $path);
+    $name = str_replace('%', '', $name);
+    $title = isset($item['title'])?$item['title']:$path;
+    $paths[$path] = array(
+      'path' => $path,
+      'title' => $title,
+      'name' => $name,
+    );
+  }
+  variable_set('addition_metatag_paths', $paths);
+}
+
+function addition_metatag_page_alter(&$page) {  
+  if($route = metatag_url_has_metatags()){
+    $instance = $route['name']; 
+    $metatags[LANGUAGE_NONE] = metatag_url_load(current_path());
+    $options = metatag_url_token_get();
+
+    $page['content']['metatags'][$instance] = metatag_metatags_view($instance, $metatags, $options);
+  }
+}
+
+function addition_metatag_ctools_plugin_api($owner, $api) {
+  if ($owner == 'metatag' && $api == 'metatag') {
+    return array('version' => 1);
+  }
+}
+
+function addition_metatag_menu_local_tasks_alter(&$data, $router_item, $root_path){
+  if(user_access('edit meta tags')&&metatag_url_has_metatags($root_path)){
+    $data['tabs'][0]['output'][] = array(
+      '#theme' => 'menu_local_task',
+      '#link' => array(
+        'title' => t('View'),
+        'href' => current_path(),
+        'tab_root_href' => $root_path,
+        'localized_options' => array(
+          'attributes' => array(
+            'class' => array('view active'),
+          ),
+        ),
+      ),
+      '#active' => true,
+    );
+    $data['tabs'][0]['output'][] = array(
+      '#theme' => 'menu_local_task',
+      '#link' => array(
+        'title' => t('Edit'),
+        'href' => 'admin/config/search/metatags/path/'.str_replace('/', '--', current_path()),
+        'tab_root_href' => $root_path,
+        'localized_options' => array(
+          'attributes' => array(
+            'class' => array('edit'),
+          ),
+        ),
+      ),
+    );
+    $data['tabs'][0]['count'] = count($data['tabs'][0]['output']);
+  } else if('admin/config/search/metatags/path/%'==$root_path) {
+    $path = str_replace('--', '/', $router_item['page_arguments'][1]);
+    
+    $data['tabs'][0]['output'][] = array(
+      '#theme' => 'menu_local_task',
+      '#link' => array(
+        'title' => t('View'),
+        'href' => $path,
+        'tab_root_href' => $root_path,
+        'localized_options' => array(
+          'attributes' => array(
+            'class' => array('view'),
+          ),
+        ),
+      ),
+    );
+    $data['tabs'][0]['output'][] = array(
+      '#theme' => 'menu_local_task',
+      '#link' => array(
+        'title' => t('Edit'),
+        'href' => 'admin/config/search/metatags/path/'.$router_item['page_arguments'][1],
+        'tab_root_href' => $root_path,
+        'localized_options' => array(
+          'attributes' => array(
+            'class' => array('edit active'),
+          ),
+        ),
+      ),
+      '#active' => true,
+    );
+    $data['tabs'][0]['count'] = count($data['tabs'][0]['output']);      
+  }
+}

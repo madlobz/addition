@@ -1,0 +1,193 @@
+<?php
+
+module_load_include('inc', 'addition', 'addition.functions');
+
+function addition_preprocess_page(&$variables){  
+  if(!user_is_logged_in()&&arg(0)=='user'){
+    if(!arg(1)||arg(1)=='login') drupal_set_title(t('User Login'));
+    elseif(arg(1)=='register') drupal_set_title(t('Create an Account'));
+    elseif(arg(1)=='password') drupal_set_title(t('Retrieve lost password'));
+  }
+
+  if(variable_get('addition_title_tabs', 1) && drupal_set_title() && ($tabs = menu_primary_local_tasks())){
+    $tabs['#prefix'] = '<ul class="tabs title-primary">';
+    $tabs['#suffix'] = '</ul>';
+    $variables['title'] = drupal_set_title() . render($tabs);
+  }
+  
+  $breadcrumbs = drupal_get_breadcrumb();
+  if(count($breadcrumbs)==1&&strip_tags($breadcrumbs[0])==t('Home')) {
+    drupal_set_breadcrumb(array()); 
+  }
+}
+
+function addition_preprocess_node(&$variables){
+  if(variable_get('addition_title_tabs', 1) && drupal_set_title() && node_is_page($variables['node']) && ($tabs = menu_primary_local_tasks())){
+    $tabs['#prefix'] = '<ul class="tabs title-primary">';
+    $tabs['#suffix'] = '</ul>';
+    $variables['title'] = drupal_set_title() . render($tabs);
+  }
+}
+
+function addition_menu_local_tasks_alter(&$data, $router_item, $root_path){
+  if($data['tabs']) foreach($data['tabs'] as $tab_key=>$tab_value){
+    if($tab_value['output']) foreach($tab_value['output'] as $output_key=>$output_value){
+      if($output_value['#link']['title'] == t('Edit')) {
+        $data['tabs'][$tab_key]['output'][$output_key]['#link']['localized_options']['attributes']['class'][] = 'edit';
+      } else if($output_value['#link']['title'] == t('View')) {
+        $data['tabs'][$tab_key]['output'][$output_key]['#link']['localized_options']['attributes']['class'][] = 'view';        
+      }
+    }
+  }
+}
+
+function addition_form_alter(&$form, &$from_state, $form_id){
+  global $user;
+  $form['#attributes']['class'][] = drupal_html_class($form_id);
+
+  switch($form_id){
+    case 'system_site_information_settings';
+      $form['error_page']['#access'] = false;
+      $form['site_information']['site_slogan']['#access'] = false;
+      $form['front_page']['default_nodes_main']['#access'] = false;
+      if($user->uid!=1) $form['front_page']['#access'] = false;
+      break;
+    case 'user_admin_permissions':
+      $form['actions']['reset'] = array(
+        '#type' => 'submit',
+        '#value' => t('Set recommended settings'),
+        '#submit' => array('addition_recommended_permissions_set'),
+      );
+      break;
+  }
+}
+
+function addition_recommended_permissions_set(){
+  $recommended_permissions = array(
+    'edit views addition settings' => 1,
+    'administer blocks' => 0,
+    'administer ckeditor' => 0,
+    'customize ckeditor' => 0,
+    'allow CKFinder file uploads' => 1,
+    'administer comments' => 0,
+    'access contextual links' => 0,
+    'access dashboard' => 1,
+    'access devel information' => 0,
+    'execute php code' => 0,
+    'switch users' => 0,
+    'administer filters' => 0,
+    'administer image styles' => 0,
+    'administer languages' => 0,
+    'administer meta tags' => 1,
+    'edit meta tags' => 1,
+    'bypass node access' => 0,
+    'administer content types' => 0,
+    'administer nodes' => 1,
+    'access content overview' => 1,
+    'view own unpublished content' => 1,
+    'view revisions' => 0,
+    'revert revisions' => 0,
+    'delete revisions' => 0,
+    'create webform content' => 0,
+    'edit own webform content' => 0,
+    'edit any webform content' => 0,
+    'delete own webform content' => 0,
+    'delete any webform content' => 0,
+    'access overlay' => 1,
+    'administer url aliases' => 1,
+    'create url aliases' => 1,
+    'administer path breadcrumbs' => 0,
+    'administer pathauto' => 0,
+    'notify of path changes' => 0,
+    'administer shortcuts' => 1,
+    'customize shortcut links' => 1,
+    'switch shortcut sets' => 1,
+    'administer modules' => 0,
+    'administer site configuration' => 1,
+    'administer themes' => 0,
+    'administer software updates' => 0,
+    'administer actions' => 0,
+    'access administration pages' => 1,
+    'access site in maintenance mode' => 1,
+    'view the administration theme' => 1,
+    'access site reports' => 1,
+    'block IP addresses' => 1,
+    'access toolbar' => 1,
+    'administer permissions' => 0,
+    'administer users' => 1,
+    'cancel account' => 0,
+    'select account cancellation method' => 0,
+    'administer views' => 0,
+    'access all views' => 0,
+    'access all webform results' => 0,
+    'access own webform results' => 0,
+    'edit all webform submissions' => 0,
+    'delete all webform submissions' => 0,
+    'access own webform submissions' => 0,
+    'edit own webform submissions' => 0,
+    'delete own webform submissions' => 0,
+    'administer fancybox' => 0,
+  );
+  
+  $site_permissions = user_permission_get_modules();
+  foreach($recommended_permissions as $k=>$v){
+    if(!isset($site_permissions[$k])) unset($recommended_permissions[$k]);
+  }
+  
+  user_role_change_permissions(3, $recommended_permissions);
+  
+  drupal_set_message(t('The changes have been saved.'));
+  
+  cache_clear_all();
+}
+
+function addition_menu() {
+  $items = array();
+  $items['not-found'] = array( 
+    'title' => 'Page not found',
+    'page callback' => 'addition_not_found',
+    'access callback' => true,
+    'type' => MENU_CALLBACK,
+    'file' => 'addition.pages.inc',
+  );
+  $items['access-denied'] = array( 
+    'title' => 'Access denied',
+    'page callback' => 'addition_access_denied',
+    'access callback' => true,
+    'type' => MENU_CALLBACK,
+    'file' => 'addition.pages.inc',
+  );
+  $items['admin/config/development/addition'] = array( 
+    'title' => 'Addition Settings',
+    'description' => 'Additional settings for main modules.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('addition_settings_form'),
+    'access callback' => true,
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'addition.admin.inc',
+  );
+  return $items;
+}
+
+function addition_theme() {
+  return array(
+    'content_not_found' => array(
+      'template' => 'content-not-found',
+    ),
+    'content_access_denied' => array(
+      'template' => 'content-access-denied',
+    ),
+  );
+}
+
+function addition_html_head_alter(&$head_elements) {
+  unset($head_elements['system_meta_generator'], $head_elements['metatag_generator']);
+}
+
+function addition_preprocess_html(&$variables){
+  if(isset($_GET['page'])){
+    $page = $_GET['page']+1;
+    $variables['head_title_array']['title'] .= ' - '.t('Page').' '.$page;
+    $variables['head_title'] = implode(' | ', $variables['head_title_array']);
+  }
+}

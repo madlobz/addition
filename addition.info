@@ -1,0 +1,7 @@
+name = Addition
+description = Interface of additional settings for main modules
+package = Addition
+core = 7.x
+;configure = 
+stylesheets[all][] = addition.css
+scripts[] = addition.js
